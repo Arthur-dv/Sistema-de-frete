@@ -6,14 +6,30 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import { initDatabase } from './database';
+import bcrypt from 'bcryptjs';
+import { initDatabase, queryOne, runSql } from './database';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import tripRoutes from './routes/trips';
 import fuelRoutes from './routes/fuel';
 
+async function seedAdmin() {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@sistema.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const existing = queryOne('SELECT id FROM users WHERE role = ?', ['admin']);
+  if (!existing) {
+    const hash = bcrypt.hashSync(adminPassword, 12);
+    runSql(
+      'INSERT INTO users (name, email, password_hash, role, placa) VALUES (?, ?, ?, ?, ?)',
+      ['Administrador', adminEmail, hash, 'admin', '']
+    );
+    console.log(`Admin criado: ${adminEmail}`);
+  }
+}
+
 async function main() {
   await initDatabase();
+  await seedAdmin();
 
   const app = express();
   const PORT = parseInt(process.env.PORT || '3001', 10);
