@@ -1,40 +1,28 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
-import fs from 'fs';
-import path from 'path';
+import { Pool } from 'pg';
 
-const DB_PATH = path.join(__dirname, '..', 'data.db');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
-let db: SqlJsDatabase;
-
-export async function initDatabase(): Promise<SqlJsDatabase> {
-  const SQL = await initSqlJs();
-
-  let buffer: Buffer | undefined;
-  if (fs.existsSync(DB_PATH)) {
-    buffer = fs.readFileSync(DB_PATH);
-  }
-
-  db = buffer ? new SQL.Database(buffer) : new SQL.Database();
-
-  db.run('PRAGMA foreign_keys = ON');
-
-  db.run(`
+export async function initDatabase(): Promise<void> {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'driver' CHECK(role IN ('admin', 'driver')),
       placa TEXT NOT NULL DEFAULT '',
       active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS trips (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
       placa TEXT NOT NULL,
       data TEXT NOT NULL,
       cte_rodeiro TEXT NOT NULL DEFAULT '',
@@ -43,15 +31,14 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
       vr_frete_peso REAL NOT NULL DEFAULT 0,
       data_recbto TEXT,
       recebido_por TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS fuel_records (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
       placa TEXT NOT NULL,
       data TEXT NOT NULL,
       nome_posto TEXT NOT NULL DEFAULT '',
@@ -59,48 +46,21 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
       litros REAL NOT NULL DEFAULT 0,
       valor_abastecido REAL NOT NULL DEFAULT 0,
       recebido_por TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-
-  saveDatabase();
-  return db;
 }
 
-export function getDb(): SqlJsDatabase {
-  if (!db) throw new Error('Database not initialized');
-  return db;
+export async function queryAll(sql: string, params: unknown[] = []): Promise<any[]> {
+  const result = await pool.query(sql, params);
+  return result.rows;
 }
 
-export function saveDatabase(): void {
-  if (!db) return;
-  const data = db.export();
-  fs.writeFileSync(DB_PATH, Buffer.from(data));
+export async function queryOne(sql: string, params: unknown[] = []): Promise<any | null> {
+  const result = await pool.query(sql, params);
+  return result.rows.length > 0 ? result.rows[0] : null;
 }
 
-export function queryAll(sql: string, params: any[] = []): any[] {
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  const results: any[] = [];
-  while (stmt.step()) {
-    results.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return results;
-}
-
-export function queryOne(sql: string, params: any[] = []): any | null {
-  const results = queryAll(sql, params);
-  return results.length > 0 ? results[0] : null;
-}
-
-export function runSql(sql: string, params: any[] = []): void {
-  db.run(sql, params);
-  saveDatabase();
-}
-
-export function getLastInsertId(): number {
-  const row = queryOne('SELECT last_insert_rowid() as id');
-  return row?.id ?? 0;
+export async function runSql(sql: string, params: unknown[] = []): Promise<void> {
+  await pool.query(sql, params);
 }

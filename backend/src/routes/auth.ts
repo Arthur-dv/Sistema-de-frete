@@ -6,7 +6,7 @@ import { sanitizeEmail } from '../utils/sanitize';
 
 const router = Router();
 
-router.post('/login', (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
   const email = sanitizeEmail(req.body.email);
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
@@ -15,8 +15,8 @@ router.post('/login', (req: Request, res: Response) => {
     return;
   }
 
-  const user = queryOne(
-    'SELECT id, name, email, password_hash, role, placa, active FROM users WHERE email = ?',
+  const user = await queryOne(
+    'SELECT id, name, email, password_hash, role, placa, active FROM users WHERE email = $1',
     [email]
   );
 
@@ -44,9 +44,9 @@ router.post('/login', (req: Request, res: Response) => {
   });
 });
 
-router.get('/me', authenticate, (req: Request, res: Response) => {
-  const user = queryOne(
-    'SELECT id, name, email, role, placa FROM users WHERE id = ? AND active = 1',
+router.get('/me', authenticate, async (req: Request, res: Response) => {
+  const user = await queryOne(
+    'SELECT id, name, email, role, placa FROM users WHERE id = $1 AND active = 1',
     [req.user!.userId]
   );
 

@@ -16,11 +16,11 @@ import fuelRoutes from './routes/fuel';
 async function seedAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@sistema.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const existing = queryOne('SELECT id FROM users WHERE role = ?', ['admin']);
+  const existing = await queryOne('SELECT id FROM users WHERE role = $1', ['admin']);
   if (!existing) {
     const hash = bcrypt.hashSync(adminPassword, 12);
-    runSql(
-      'INSERT INTO users (name, email, password_hash, role, placa) VALUES (?, ?, ?, ?, ?)',
+    await runSql(
+      'INSERT INTO users (name, email, password_hash, role, placa) VALUES ($1, $2, $3, $4, $5)',
       ['Administrador', adminEmail, hash, 'admin', '']
     );
     console.log(`Admin criado: ${adminEmail}`);
