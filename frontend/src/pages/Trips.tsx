@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { formatCurrency } from '../services/format';
 
 interface Trip {
   id: number;
@@ -195,7 +196,7 @@ export function Trips() {
                   <td>{trip.cte_rodeiro}</td>
                   <td>{trip.empresa_origem}</td>
                   <td>{trip.empresa_destino}</td>
-                  <td className="number">R$ {trip.vr_frete_peso.toFixed(2)}</td>
+                  <td className="number">{formatCurrency(trip.vr_frete_peso)}</td>
                   <td>{trip.data_recbto || '-'}</td>
                   <td>{trip.recebido_por || '-'}</td>
                   <td className="actions">
@@ -209,7 +210,7 @@ export function Trips() {
           <tfoot>
             <tr>
               <td colSpan={5} className="total-label">TOTAL FRETE PESO</td>
-              <td className="number total-value">R$ {totalFrete.toFixed(2)}</td>
+              <td className="number total-value">{formatCurrency(totalFrete)}</td>
               <td colSpan={3}></td>
             </tr>
           </tfoot>

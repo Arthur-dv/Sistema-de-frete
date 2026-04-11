@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { formatCurrency, formatNumber, formatDecimal } from '../services/format';
 
 interface FuelRecord {
   id: number;
@@ -188,9 +189,9 @@ export function Fuel() {
                   <td>{record.placa}</td>
                   <td>{record.data}</td>
                   <td>{record.nome_posto}</td>
-                  <td className="number">{record.km.toLocaleString('pt-BR')}</td>
-                  <td className="number">{record.litros.toFixed(1)}</td>
-                  <td className="number">R$ {record.valor_abastecido.toFixed(2)}</td>
+                  <td className="number">{formatNumber(record.km)}</td>
+                  <td className="number">{formatDecimal(record.litros)}</td>
+                  <td className="number">{formatCurrency(record.valor_abastecido)}</td>
                   <td>{record.recebido_por || '-'}</td>
                   <td className="actions">
                     <button className="btn btn-sm btn-outline" onClick={() => handleEdit(record)}>Editar</button>
@@ -203,8 +204,8 @@ export function Fuel() {
           <tfoot>
             <tr>
               <td colSpan={4} className="total-label">TOTAL</td>
-              <td className="number total-value">{totalLitros.toFixed(1)} L</td>
-              <td className="number total-value">R$ {totalValor.toFixed(2)}</td>
+              <td className="number total-value">{formatDecimal(totalLitros)} L</td>
+              <td className="number total-value">{formatCurrency(totalValor)}</td>
               <td colSpan={2}></td>
             </tr>
           </tfoot>
