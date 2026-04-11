@@ -3,6 +3,12 @@ import { queryAll, queryOne, runSql, getLastInsertId } from '../database';
 import { authenticate } from '../middleware/auth';
 import { sanitizeString, sanitizeNumber, sanitizeDateString } from '../utils/sanitize';
 
+function idFromParams(idParam: string | string[] | undefined): number {
+  const s = Array.isArray(idParam) ? idParam[0] : idParam;
+  if (s == null || s === '') return NaN;
+  return parseInt(String(s), 10);
+}
+
 const router = Router();
 router.use(authenticate);
 
@@ -44,7 +50,7 @@ router.post('/', (req: Request, res: Response) => {
 
 router.put('/:id', (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const id = parseInt(req.params.id, 10);
+  const id = idFromParams(req.params.id);
 
   const existing = queryOne('SELECT id FROM trips WHERE id = ? AND user_id = ?', [id, userId]);
   if (!existing) {
@@ -73,7 +79,7 @@ router.put('/:id', (req: Request, res: Response) => {
 
 router.delete('/:id', (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const id = parseInt(req.params.id, 10);
+  const id = idFromParams(req.params.id);
 
   const existing = queryOne('SELECT id FROM trips WHERE id = ? AND user_id = ?', [id, userId]);
   if (!existing) {
