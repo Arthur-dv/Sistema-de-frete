@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
-import { formatCurrency, formatNumber, formatDecimal } from '../services/format';
 
 interface FuelRecord {
   id: number;
@@ -170,6 +169,7 @@ export function Fuel() {
         <table>
           <thead>
             <tr>
+              <th>Ações</th>
               <th>Placa</th>
               <th>Data</th>
               <th>Nome do Posto</th>
@@ -177,7 +177,6 @@ export function Fuel() {
               <th>Litros</th>
               <th>Valor Abastecido</th>
               <th>Recebido Por</th>
-              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -186,27 +185,27 @@ export function Fuel() {
             ) : (
               records.map(record => (
                 <tr key={record.id}>
-                  <td>{record.placa}</td>
-                  <td>{record.data}</td>
-                  <td>{record.nome_posto}</td>
-                  <td className="number">{formatNumber(record.km)}</td>
-                  <td className="number">{formatDecimal(record.litros)}</td>
-                  <td className="number">{formatCurrency(record.valor_abastecido)}</td>
-                  <td>{record.recebido_por || '-'}</td>
                   <td className="actions">
                     <button className="btn btn-sm btn-outline" onClick={() => handleEdit(record)}>Editar</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDelete(record.id)}>Excluir</button>
                   </td>
+                  <td>{record.placa}</td>
+                  <td>{record.data}</td>
+                  <td>{record.nome_posto}</td>
+                  <td className="number">{record.km}</td>
+                  <td className="number">{record.litros}</td>
+                  <td className="number">{record.valor_abastecido}</td>
+                  <td>{record.recebido_por || '-'}</td>
                 </tr>
               ))
             )}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="total-label">TOTAL</td>
-              <td className="number total-value">{formatDecimal(totalLitros)} L</td>
-              <td className="number total-value">{formatCurrency(totalValor)}</td>
-              <td colSpan={2}></td>
+              <td colSpan={5} className="total-label">TOTAL</td>
+              <td className="number total-value">{totalLitros} L</td>
+              <td className="number total-value">{totalValor}</td>
+              <td></td>
             </tr>
           </tfoot>
         </table>
