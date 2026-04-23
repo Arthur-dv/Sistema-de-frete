@@ -2,6 +2,15 @@ import { Pool } from 'pg';
 
 let pool: Pool | null = null;
 
+function shouldUseSsl(databaseUrl: string): boolean {
+  if (process.env.DATABASE_SSL === 'false') return false;
+  if (process.env.DATABASE_SSL === 'true') return true;
+  if (process.env.NODE_ENV === 'production') return true;
+  return /railway\.app|railway\.internal|neon\.tech|supabase\.co|amazonaws\.com|render\.com|sslmode=require/i.test(
+    databaseUrl
+  );
+}
+
 function getPool(): Pool {
   if (pool) return pool;
   const databaseUrl = process.env.DATABASE_URL;
@@ -12,7 +21,7 @@ function getPool(): Pool {
   }
   pool = new Pool({
     connectionString: databaseUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : false,
     connectionTimeoutMillis: 10000,
     idleTimeoutMillis: 30000,
   });

@@ -36,6 +36,12 @@ async function main() {
   await initDatabase();
   await seedAdmin();
 
+  const jwtSecret = process.env.JWT_SECRET || '';
+  if (process.env.NODE_ENV === 'production' && jwtSecret.length < 32) {
+    console.error('JWT_SECRET em produção deve ter pelo menos 32 caracteres (Railway → Variables).');
+    process.exit(1);
+  }
+
   const app = express();
   const PORT = parseInt(process.env.PORT || '3001', 10);
 
