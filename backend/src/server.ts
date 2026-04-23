@@ -40,7 +40,11 @@ async function main() {
   const PORT = parseInt(process.env.PORT || '3001', 10);
 
   app.set('trust proxy', 1);
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+  );
 
   const envOrigins = (process.env.FRONTEND_URL || '')
     .split(',')
@@ -57,11 +61,11 @@ async function main() {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('CORS: origem não permitida'));
+        callback(null, false);
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
 
