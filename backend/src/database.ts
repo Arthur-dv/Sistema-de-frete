@@ -34,6 +34,13 @@ export async function initDatabase(): Promise<void> {
     )
   `);
 
+  await p.query(
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS placa TEXT NOT NULL DEFAULT ''`
+  );
+  await p.query(
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS active INTEGER NOT NULL DEFAULT 1`
+  );
+
   await p.query(`
     CREATE TABLE IF NOT EXISTS trips (
       id SERIAL PRIMARY KEY,

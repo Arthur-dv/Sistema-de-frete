@@ -95,7 +95,7 @@ async function main() {
     res.status(404).json({ error: 'Rota não encontrada' });
   });
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}`);
   });
   server.on('error', (err: NodeJS.ErrnoException) => {
