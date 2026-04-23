@@ -1,19 +1,27 @@
 import { Pool } from 'pg';
 
-if (!process.env.DATABASE_URL) {
-  console.error('ERRO: variável DATABASE_URL não definida.');
-  process.exit(1);
+let pool: Pool | null = null;
+
+function getPool(): Pool {
+  if (pool) return pool;
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error(
+      'DATABASE_URL não definido. Crie `backend/.env` com DATABASE_URL ou inicie o servidor a partir da pasta `backend`.'
+    );
+  }
+  pool = new Pool({
+    connectionString: databaseUrl,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+  });
+  return pool;
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-});
-
 export async function initDatabase(): Promise<void> {
-  await pool.query(`
+  const p = getPool();
+  await p.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -26,7 +34,7 @@ export async function initDatabase(): Promise<void> {
     )
   `);
 
-  await pool.query(`
+  await p.query(`
     CREATE TABLE IF NOT EXISTS trips (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -42,7 +50,7 @@ export async function initDatabase(): Promise<void> {
     )
   `);
 
-  await pool.query(`
+  await p.query(`
     CREATE TABLE IF NOT EXISTS fuel_records (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -59,15 +67,15 @@ export async function initDatabase(): Promise<void> {
 }
 
 export async function queryAll(sql: string, params: unknown[] = []): Promise<any[]> {
-  const result = await pool.query(sql, params);
+  const result = await getPool().query(sql, params);
   return result.rows;
 }
 
 export async function queryOne(sql: string, params: unknown[] = []): Promise<any | null> {
-  const result = await pool.query(sql, params);
+  const result = await getPool().query(sql, params);
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
 export async function runSql(sql: string, params: unknown[] = []): Promise<void> {
-  await pool.query(sql, params);
+  await getPool().query(sql, params);
 }

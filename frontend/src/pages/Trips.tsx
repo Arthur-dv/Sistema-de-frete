@@ -36,9 +36,7 @@ export function Trips() {
 
   const totalFrete = trips.reduce((sum, t) => sum + (t.vr_frete_peso || 0), 0);
 
-  useEffect(() => {
-    loadTrips();
-  }, []);
+  useEffect(() => { loadTrips(); }, []);
 
   useEffect(() => {
     if (user?.placa && !editingId) {
@@ -50,8 +48,8 @@ export function Trips() {
     try {
       const data = await api.get<{ trips: Trip[] }>('/trips');
       setTrips(data.trips);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     } finally {
       setLoading(false);
     }
@@ -77,8 +75,8 @@ export function Trips() {
       }
       setForm({ ...emptyTrip, placa: user?.placa || '' });
       await loadTrips();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
@@ -101,8 +99,8 @@ export function Trips() {
     try {
       await api.delete(`/trips/${id}`);
       await loadTrips();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
@@ -160,12 +158,8 @@ export function Trips() {
           </div>
         </div>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            {editingId ? 'Atualizar' : 'Adicionar'}
-          </button>
-          {editingId && (
-            <button type="button" className="btn btn-outline" onClick={handleCancel}>Cancelar</button>
-          )}
+          <button type="submit" className="btn btn-primary btn-full sm:w-auto">{editingId ? 'Atualizar Viagem' : 'Adicionar Viagem'}</button>
+          {editingId && <button type="button" className="btn btn-outline btn-full sm:w-auto" onClick={handleCancel}>Cancelar</button>}
         </div>
       </form>
 
@@ -209,8 +203,8 @@ export function Trips() {
           <tfoot>
             <tr>
               <td colSpan={6} className="total-label">TOTAL FRETE PESO</td>
-              <td className="number total-value">{totalFrete}</td>
-              <td colSpan={2}></td>
+              <td className="total-value">{totalFrete}</td>
+              <td colSpan={2} />
             </tr>
           </tfoot>
         </table>

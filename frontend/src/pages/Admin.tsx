@@ -12,13 +12,7 @@ interface UserRecord {
   created_at: string;
 }
 
-const emptyForm = {
-  name: '',
-  email: '',
-  password: '',
-  role: 'driver',
-  placa: '',
-};
+const emptyForm = { name: '', email: '', password: '', role: 'driver', placa: '' };
 
 export function Admin() {
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -28,16 +22,14 @@ export function Admin() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  useEffect(() => { loadUsers(); }, []);
 
   async function loadUsers() {
     try {
       const data = await api.get<{ users: UserRecord[] }>('/admin/users');
       setUsers(data.users);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     } finally {
       setLoading(false);
     }
@@ -49,8 +41,7 @@ export function Admin() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError(''); setSuccess('');
     try {
       if (editingId) {
         const payload: Record<string, unknown> = { ...form };
@@ -64,44 +55,30 @@ export function Admin() {
       }
       setForm(emptyForm);
       await loadUsers();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
   function handleEdit(user: UserRecord) {
     setEditingId(user.id);
-    setForm({
-      name: user.name,
-      email: user.email,
-      password: '',
-      role: user.role,
-      placa: user.placa,
-    });
-    setError('');
-    setSuccess('');
+    setForm({ name: user.name, email: user.email, password: '', role: user.role, placa: user.placa });
+    setError(''); setSuccess('');
   }
 
   async function handleToggleActive(user: UserRecord) {
     try {
       await api.put(`/admin/users/${user.id}`, {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        placa: user.placa,
-        active: !user.active,
+        name: user.name, email: user.email, role: user.role, placa: user.placa, active: !user.active,
       });
       await loadUsers();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
   function handleCancel() {
-    setEditingId(null);
-    setForm(emptyForm);
-    setError('');
-    setSuccess('');
+    setEditingId(null); setForm(emptyForm); setError(''); setSuccess('');
   }
 
   if (loading) return <div className="loading">Carregando...</div>;
@@ -112,7 +89,7 @@ export function Admin() {
         <h2>Gerenciar Usuários</h2>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error   && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
       <form onSubmit={handleSubmit} className="record-form">
@@ -127,7 +104,7 @@ export function Admin() {
             <input type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} required placeholder="email@exemplo.com" />
           </div>
           <div className="form-group">
-            <label>Senha {editingId ? '(deixe vazio para manter)' : ''}</label>
+            <label>Senha {editingId ? '(vazio = manter)' : ''}</label>
             <input type="password" value={form.password} onChange={e => handleChange('password', e.target.value)} required={!editingId} placeholder="Min. 6 caracteres" autoComplete="new-password" />
           </div>
         </div>
@@ -145,12 +122,8 @@ export function Admin() {
           </div>
         </div>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            {editingId ? 'Atualizar' : 'Cadastrar'}
-          </button>
-          {editingId && (
-            <button type="button" className="btn btn-outline" onClick={handleCancel}>Cancelar</button>
-          )}
+          <button type="submit" className="btn btn-primary btn-full sm:w-auto">{editingId ? 'Atualizar Usuário' : 'Cadastrar Usuário'}</button>
+          {editingId && <button type="button" className="btn btn-outline btn-full sm:w-auto" onClick={handleCancel}>Cancelar</button>}
         </div>
       </form>
 

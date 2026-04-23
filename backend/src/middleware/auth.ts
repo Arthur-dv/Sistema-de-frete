@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-in-prod';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET || '';
+  if (secret.length >= 32) return secret;
+  if (process.env.NODE_ENV !== 'production') return 'dev-secret-change-me-min-32-chars-________';
+  throw new Error('JWT_SECRET inválido. Configure um valor com pelo menos 32 caracteres.');
+}
 
 export interface TokenPayload {
   userId: number;
@@ -17,7 +22,7 @@ declare global {
 }
 
 export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '12h' });
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction): void {
@@ -29,7 +34,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
 
   const token = header.slice(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as TokenPayload;
     req.user = decoded;
     next();
   } catch {

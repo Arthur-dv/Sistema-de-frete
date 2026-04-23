@@ -1,5 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), 'backend', '.env'), override: false });
+dotenv.config({ path: path.resolve(__dirname, '..', '.env'), override: false });
 
 import express from 'express';
 import cors from 'cors';
@@ -14,6 +18,7 @@ import tripRoutes from './routes/trips';
 import fuelRoutes from './routes/fuel';
 
 async function seedAdmin() {
+  if (process.env.SEED_ADMIN !== 'true') return;
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@sistema.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const existing = await queryOne('SELECT id FROM users WHERE role = $1', ['admin']);
@@ -37,9 +42,15 @@ async function main() {
   app.set('trust proxy', 1);
   app.use(helmet());
 
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? (process.env.FRONTEND_URL || '').split(',').map(s => s.trim()).filter(Boolean)
-    : ['http://localhost:5173'];
+  const envOrigins = (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const allowedOrigins = [
+    ...envOrigins,
+    'http://localhost:5173',
+  ];
 
   app.use(cors({
     origin: (origin, callback) => {

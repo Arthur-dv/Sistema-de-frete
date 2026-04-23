@@ -18,22 +18,26 @@ export function Login() {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1>Sistema de Fretes</h1>
-        <p className="login-subtitle">Faça login para continuar</p>
+    <div className="flex items-center justify-center min-h-[calc(100dvh-60px)] px-4 py-8">
+      <div className="bg-white border border-slate-200 rounded-xl p-8 w-full max-w-[400px] shadow-sm">
+        <h1 className="text-2xl font-bold text-blue-600 mb-1">Sistema de Fretes</h1>
+        <p className="text-slate-500 text-sm mb-6">Faça login para continuar</p>
+
         {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-[0.8rem] font-semibold text-slate-500 uppercase tracking-wide">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -44,8 +48,11 @@ export function Login() {
               placeholder="seu@email.com"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Senha</label>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="password" className="text-[0.8rem] font-semibold text-slate-500 uppercase tracking-wide">
+              Senha
+            </label>
             <input
               id="password"
               type="password"
@@ -56,11 +63,11 @@ export function Login() {
               placeholder="••••••"
             />
           </div>
+
           <button
             type="submit"
-            className="btn btn-primary btn-full"
+            className="btn btn-primary btn-full mt-1"
             disabled={submitting || !email || !password}
-            style={{ marginTop: '1.25rem' }}
           >
             {submitting ? 'Entrando...' : 'Entrar'}
           </button>

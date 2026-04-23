@@ -33,11 +33,9 @@ export function Fuel() {
   const [loading, setLoading] = useState(true);
 
   const totalLitros = records.reduce((sum, r) => sum + (r.litros || 0), 0);
-  const totalValor = records.reduce((sum, r) => sum + (r.valor_abastecido || 0), 0);
+  const totalValor  = records.reduce((sum, r) => sum + (r.valor_abastecido || 0), 0);
 
-  useEffect(() => {
-    loadRecords();
-  }, []);
+  useEffect(() => { loadRecords(); }, []);
 
   useEffect(() => {
     if (user?.placa && !editingId) {
@@ -49,8 +47,8 @@ export function Fuel() {
     try {
       const data = await api.get<{ records: FuelRecord[] }>('/fuel');
       setRecords(data.records);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     } finally {
       setLoading(false);
     }
@@ -78,8 +76,8 @@ export function Fuel() {
       }
       setForm({ ...emptyRecord, placa: user?.placa || '' });
       await loadRecords();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
@@ -101,8 +99,8 @@ export function Fuel() {
     try {
       await api.delete(`/fuel/${id}`);
       await loadRecords();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro');
     }
   }
 
@@ -156,12 +154,8 @@ export function Fuel() {
           </div>
         </div>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            {editingId ? 'Atualizar' : 'Adicionar'}
-          </button>
-          {editingId && (
-            <button type="button" className="btn btn-outline" onClick={handleCancel}>Cancelar</button>
-          )}
+          <button type="submit" className="btn btn-primary btn-full sm:w-auto">{editingId ? 'Atualizar Abastecimento' : 'Adicionar Abastecimento'}</button>
+          {editingId && <button type="button" className="btn btn-outline btn-full sm:w-auto" onClick={handleCancel}>Cancelar</button>}
         </div>
       </form>
 
@@ -203,9 +197,9 @@ export function Fuel() {
           <tfoot>
             <tr>
               <td colSpan={5} className="total-label">TOTAL</td>
-              <td className="number total-value">{totalLitros} L</td>
-              <td className="number total-value">{totalValor}</td>
-              <td></td>
+              <td className="total-value">{totalLitros} L</td>
+              <td className="total-value">{totalValor}</td>
+              <td />
             </tr>
           </tfoot>
         </table>
